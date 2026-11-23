@@ -1,0 +1,70 @@
+name: Build unsigned Twoyi IPA (Android 8.1)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [android-8.1]
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/build-unsigned-ipa.yml'
+
+env:
+  BASE_IPA: https://dl.twoyi.ai/twoyi_1.2.5_939.ipa
+  APK_81: https://github.com/twoyi/twoyi/releases/download/0.5.4/twoyi_0.5.4-03211927-release.apk
+  EROFS_UUID: 612e28ce-22f1-e6d0-91f6-64ee61c93db2
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq p7zip-full erofs-utils zip unzip
+
+      - name: Download inputs
+        run: |
+          curl -fL --retry 3 -o base.ipa "$BASE_IPA"
+          curl -fL --retry 3 -o twoyi.apk "$APK_81"
+
+      - name: Unpack base IPA
+        run: unzip -q base.ipa -d app
+
+      - name: Extract Android 8.1 rootfs
+        run: |
+          unzip -q twoyi.apk assets/rootfs.7z -d apk-assets
+          7z x -y -o81root apk-assets/assets/rootfs.7z >/dev/null
+          test -d 81root/rootfs
+          chmod -R u+rwX 81root/rootfs
+
+      - name: Build EROFS image
+        run: |
+          APP=app/Payload/Twoyi.app
+          tar -C 81root/rootfs -cf rootfs.tar .
+          mkfs.erofs -b 4096 --dsunit=4 -E ^inline_data --tar=f \
+            --force-uid=0 --force-gid=0 \
+            -T 1230768000 -U "$EROFS_UUID" \
+            "$APP/rom/system.erofs" rootfs.tar
+
+      - name: Regenerate rootfs metadata
+        run: |
+          APP=app/Payload/Twoyi.app
+          TREE=$(python3 scripts/make_manifest.py 81root/rootfs "$APP/rom/rootfs.manifest.json")
+          python3 scripts/patch_metadata.py "$APP" "$TREE"
+
+      - name: Repack unsigned IPA
+        run: |
+          rm -rf app/Payload/Twoyi.app/_CodeSignature
+          (cd app && zip -q -r -1 -y ../twoyi-android8.1-unsigned.ipa Payload)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twoyi-android8.1-unsigned
+          path: twoyi-android8.1-unsigned.ipa
+          if-no-files-found: error
