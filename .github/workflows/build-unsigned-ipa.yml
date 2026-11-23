@@ -38,7 +38,14 @@ jobs:
       - name: Extract Android 8.1 rootfs
         run: |
           unzip -q twoyi.apk assets/rootfs.7z -d apk-assets
-          7z x -y -o81root apk-assets/assets/rootfs.7z >/dev/null
+          # 7z refuses the Android rootfs' absolute/.. symlinks and exits 2.
+          # Recreate the ones it skipped so the image stays faithful.
+          7z x -y -o81root apk-assets/assets/rootfs.7z 2>&1 | tee 7z.log || true
+          grep -E 'Dangerous (symbolic )?link path was ignored' 7z.log | while IFS= read -r line; do
+            path=$(printf '%s' "$line" | sed -E 's/^.*ignored : ([^ ]+) : (.*)$/\1/')
+            target=$(printf '%s' "$line" | sed -E 's/^.*ignored : ([^ ]+) : (.*)$/\2/')
+            ln -sfn "$target" "$path"
+          done
           test -d 81root/rootfs
           chmod -R u+rwX 81root/rootfs
 
