@@ -44,7 +44,7 @@ jobs:
           grep -E 'Dangerous (symbolic )?link path was ignored' 7z.log | while IFS= read -r line; do
             path=$(printf '%s' "$line" | sed -E 's/^.*ignored : ([^ ]+) : (.*)$/\1/')
             target=$(printf '%s' "$line" | sed -E 's/^.*ignored : ([^ ]+) : (.*)$/\2/')
-            ln -sfn "$target" "$path"
+            ln -sfn "$target" "81root/$path"
           done
           test -d 81root/rootfs
           chmod -R u+rwX 81root/rootfs
