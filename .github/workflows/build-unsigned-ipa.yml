@@ -52,6 +52,7 @@ jobs:
       - name: Build EROFS image
         run: |
           APP=app/Payload/Twoyi.app
+          rm -f "$APP/rom/system.erofs"
           tar -C 81root/rootfs -cf rootfs.tar .
           mkfs.erofs -b 4096 -E ^inline_data --tar=f \
             --force-uid=0 --force-gid=0 \
