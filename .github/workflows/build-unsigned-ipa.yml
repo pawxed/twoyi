@@ -53,7 +53,7 @@ jobs:
         run: |
           APP=app/Payload/Twoyi.app
           tar -C 81root/rootfs -cf rootfs.tar .
-          mkfs.erofs -b 4096 --dsunit=4 -E ^inline_data --tar=f \
+          mkfs.erofs -b 4096 -E ^inline_data --tar=f \
             --force-uid=0 --force-gid=0 \
             -T 1230768000 -U "$EROFS_UUID" \
             "$APP/rom/system.erofs" rootfs.tar
