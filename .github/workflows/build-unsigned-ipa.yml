@@ -9,7 +9,7 @@ on:
       - '.github/workflows/build-unsigned-ipa.yml'
 
 env:
-  BASE_IPA: https://dl.twoyi.ai/twoyi_1.2.5_939.ipa
+  BASE_IPA: https://dl.twoyi.ai/twoyi_1.2.6_940.ipa
   APK_81: https://github.com/twoyi/twoyi/releases/download/0.5.4/twoyi_0.5.4-03211927-release.apk
   EROFS_UUID: 612e28ce-22f1-e6d0-91f6-64ee61c93db2
 
