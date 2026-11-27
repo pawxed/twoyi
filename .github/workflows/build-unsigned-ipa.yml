@@ -49,6 +49,21 @@ jobs:
           test -d 81root/rootfs
           chmod -R u+rwX 81root/rootfs
 
+      - name: Add Twoyi runtime device nodes
+        run: |
+          # The 8.1 archive has none of the char devices the iOS runtime expects.
+          # Missing /dev/twoyi-display is reported as errno=2 to the guest.
+          for spec in 'kmsg c 1 11 600' 'kmsg_debug c 1 11 622' 'null c 1 3 666' \
+                      'random c 1 8 666' 'urandom c 1 9 666' 'zero c 1 5 666' \
+                      'twoyi-display c 242 0 600'; do
+            set -- $spec
+            sudo mknod -m "$5" "81root/rootfs/dev/$1" "$2" "$3" "$4"
+          done
+          ls -l 81root/rootfs/dev
+
+      - name: Patch guest syscall ABI gap
+        run: python3 scripts/patch_guest.py 81root/rootfs/system/lib64/libc.so
+
       - name: Build EROFS image
         run: |
           APP=app/Payload/Twoyi.app
