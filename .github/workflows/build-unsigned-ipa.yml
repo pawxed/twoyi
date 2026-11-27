@@ -48,6 +48,7 @@ jobs:
           done
           test -d 81root/rootfs
           chmod -R u+rwX 81root/rootfs
+          ln -sfn /init 81root/rootfs/system/bin/init
 
       - name: Add Twoyi runtime device nodes
         run: |

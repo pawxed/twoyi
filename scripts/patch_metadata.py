@@ -38,6 +38,9 @@ def main(app, tree):
 
     launch = load(os.path.join(rom, 'launch.json'))
     launch['rootfs_tree_sha256'] = tree
+    # Android 8.1 keeps init at /init; the stock 13 contract execs
+    # /system/bin/init, which does not exist in the 8.1 rootfs (errno=2).
+    launch['argv'] = ['/init']
     save(os.path.join(rom, 'launch.json'), launch)
 
     lock = load(os.path.join(rom, 'baseline.lock.json'))
