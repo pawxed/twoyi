@@ -80,6 +80,7 @@ jobs:
           APP=app/Payload/Twoyi.app
           TREE=$(python3 scripts/make_manifest.py 81root/rootfs "$APP/rom/rootfs.manifest.json")
           python3 scripts/patch_metadata.py "$APP" "$TREE"
+          python3 scripts/patch_store.py "$APP" "$TREE"
 
       - name: Repack unsigned IPA
         run: |
